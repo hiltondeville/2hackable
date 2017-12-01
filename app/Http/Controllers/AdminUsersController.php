@@ -133,7 +133,7 @@ class AdminUsersController extends Controller
 
          }
 
-      
+
 
          if($file = $request->file('photo_id')) {
 
@@ -165,7 +165,11 @@ class AdminUsersController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function destroy($id)
+
+
     {
+      User::findOrFail($id)->delete();
+      return redirect('/admin/users');
         //
     }
 }
