@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\UserRequest;
 
+use App\Http\Requests\UserEditRequest;
+
 use Illuminate\Http\Request;
 
 use App\User;
@@ -51,7 +53,20 @@ class AdminUsersController extends Controller
      */
     public function store(UserRequest $request)
     {
-      $input = $request->all();
+
+      if(trim($request->password) == '') {
+        $input = $request->except('password');
+
+      } else {
+
+        $input = $request->all();
+        $input['password'] = bcrypt($request->password);
+
+      }
+
+
+
+      // $input = $request->all();
 
       if($file = $request->file('photo_id')) {
 
@@ -64,7 +79,7 @@ class AdminUsersController extends Controller
         $input['photo_id'] = $photo->id;
 
       }
-      $input['password'] = bcrypt($request->password);
+
       User::create($input);
       return redirect('admin/users');
     }
@@ -90,7 +105,11 @@ class AdminUsersController extends Controller
     public function edit($id)
     {
         //
-        return view('admin.users.edit');
+        $user = User::findOrFail($id);
+
+        $roles = Role::lists('name', 'id')->all();
+
+        return view('admin.users.edit', compact('user','roles'));
     }
 
     /**
@@ -100,10 +119,43 @@ class AdminUsersController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(UserEditRequest $request, $id)
     {
-        //
-        return view('admin.users.update');
+         $user = User::findOrFail($id);
+
+         if(trim($request->password) == '') {
+           $input = $request->except('password');
+
+         } else {
+
+           $input = $request->all();
+           $input['password'] = bcrypt($request->password);
+
+         }
+
+      
+
+         if($file = $request->file('photo_id')) {
+
+           $name = time() . $file->getClientOriginalName();
+
+           $file->move('images' , $name);
+
+           $photo = Photo::create(['file' => $name]);
+
+           $input['photo_id'] = $photo->id;
+
+         }
+
+
+         $user->update($input);
+
+         return redirect('/admin/users');
+
+
+
+
+        //return $request->all(); TO CHECK IF THE FORM IS WORKING
     }
 
     /**
